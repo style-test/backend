@@ -19,6 +19,15 @@ type ProductValue struct {
 	Url       string         `json:"url"`
 }
 
+type RankingValue struct {
+	Id          int    `json:"id"`
+	Description string `json:"description"`
+	NameEn      string `json:"name_en"`
+	NameKo      string `json:"name_ko"`
+	ImageUrl    string `json:"image_url"`
+	Url         string `json:"url"`
+}
+
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -86,6 +95,50 @@ func main() {
 				ShopKo:    ShopKo,
 				Title:     Title,
 				Url:       Url,
+			})
+		}
+
+		return c.JSON(http.StatusOK, Lists)
+	})
+
+	e.GET("/rankings", func(c echo.Context) error {
+		rows, err := db.Query("SELECT * FROM ranking")
+		if err != nil {
+			return &echo.HTTPError{
+				Code:    http.StatusBadRequest,
+				Message: "Not Query",
+			}
+		}
+		defer rows.Close()
+
+		var Lists []*RankingValue
+
+		for rows.Next() {
+			var Id int
+			var Description string
+			var NameEn string
+			var NameKo string
+			var ImageUrl string
+			var Url string
+
+			err = rows.Scan(
+				&Id, &Description, &NameEn, &NameKo, &ImageUrl, &Url,
+			)
+
+			if err != nil {
+				return &echo.HTTPError{
+					Code:    http.StatusBadRequest,
+					Message: err.Error(),
+				}
+			}
+
+			Lists = append(Lists, &RankingValue{
+				Id: Id,
+				Description: Description,
+				NameEn: NameEn,
+				NameKo: NameKo,
+				ImageUrl: ImageUrl,
+				Url:      Url,
 			})
 		}
 
